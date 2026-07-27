@@ -7,20 +7,21 @@ NEW_SSH_PORT=53678
 
 echo "=== 1. 检查并安装必要服务 ==="
 apt-get update
-apt-get install -y iptables iptables-persistent fail2ban ufw
+# 移除 ufw，只安装 iptables, iptables-persistent, fail2ban
+apt-get install -y iptables iptables-persistent fail2ban
 
 systemctl enable netfilter-persistent
 
-echo "=== 2. 清空原有的 ufw 与 iptables 规则 ==="
+echo "=== 2. 清除 ufw 残留与清空原有 iptables 规则 ==="
 
-# 2.1 禁用并重置 ufw 防火墙（如果已安装/启用）
-if command -v ufw >/dev/null 2>&1; then
-    echo "正在重置并禁用 ufw..."
-    ufw --force reset || true
-    ufw disable || true
+# 2.1 如果系统中存在 ufw，卸载并清理，防止与 iptables-persistent 冲突
+if command -v ufw >/dev/null 2>&1 || dpkg -l | grep -q ufw; then
+    echo "正在卸载 ufw 以防止软件包冲突..."
+    ufw disable 2>/dev/null || true
+    apt-get remove -y --purge ufw 2>/dev/null || true
 fi
 
-# 2.2 清空 iptables 所有链中的规则并重置默认策略
+# 2.2 清空 iptables 所有链中的规则并重置默认策略为 ACCEPT
 echo "正在清空 iptables 现有规则..."
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
