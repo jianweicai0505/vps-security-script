@@ -1,4 +1,3 @@
-cat << 'EOF' > /root/setup_security.sh
 #!/bin/bash
 
 # 设置发生错误时立即停止
@@ -54,8 +53,6 @@ iptables -A INPUT -p icmp --icmp-type echo-request -m hashlimit --hashlimit-name
 echo "成功增加 ICMP 限速放行规则 (1 req/s, burst 4)"
 
 # --- 3. 针对 2096 和 8443 端口部署频率限制（1小时最多访问 3 次） ---
-# 说明：对新建连接记录 IP 并匹配 3600 秒内的请求次数，超过 3 次直接 DROP
-
 # TCP 2096
 iptables -A INPUT -p tcp --dport 2096 -m state --state NEW -m recent --set --name LIMIT_2096_TCP
 iptables -A INPUT -p tcp --dport 2096 -m state --state NEW -m recent --update --seconds 3600 --hitcount 4 --name LIMIT_2096_TCP -j DROP
@@ -122,4 +119,3 @@ echo "  ✅ 防火墙重置与最新限速/限频规则配置完成！"
 echo "  注意：当前终端连接不会断开，但请另外开一个窗口验证 SSH 登录："
 echo "  ssh -p ${NEW_SSH_PORT} root@<你的IP>"
 echo "=================================================================="
-EOF
