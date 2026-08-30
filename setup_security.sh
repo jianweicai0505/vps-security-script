@@ -80,6 +80,7 @@ echo "成功为 2096 与 8443 端口（TCP/UDP）添加频率限制：单个 IP 
 iptables -A INPUT -p tcp --dport ${NEW_SSH_PORT} -j ACCEPT  # 修改后的 SSH 端口
 echo "成功放行 SSH 端口: ${NEW_SSH_PORT}"
 
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
 iptables -A INPUT -p tcp --dport 443 -j ACCEPT             # HTTPS
 iptables -A INPUT -p tcp --dport 49880 -j ACCEPT           # 49880 TCP
 iptables -A INPUT -p tcp --dport 50021:50030 -j ACCEPT     # 端口段 TCP
