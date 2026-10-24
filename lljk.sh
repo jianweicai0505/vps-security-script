@@ -43,7 +43,7 @@ send_tg_msg() {
 # ---------------- 3. 交互式配置生成函数 ----------------
 configure_interactive() {
     echo "=========================================="
-    echo "       VPS 流量监控与报警 - 交互式配置"
+    echo "        VPS 流量监控与报警 - 交互式配置"
     echo "=========================================="
     
     # 自动识别默认网卡
@@ -95,7 +95,6 @@ EOF
 }
 
 # ---------------- 4. 配置读取与初始化检查 ----------------
-# 强制配置参数 (-c / --config) 或 首次运行无配置文件时触发交互
 if [ "$1" = "-c" ] || [ "$1" = "--config" ] || [ ! -f "$CONFIG_FILE" ]; then
     configure_interactive
 fi
@@ -134,7 +133,6 @@ fi
 # ---------------- 7. 流量数据获取与统计 ----------------
 TIME_NOW=$(date "+%Y-%m-%d %H:%M:%S")
 
-# 获取 JSON 格式的月度流量
 JSON_DATA=$(vnstat -i "$INTERFACE" --json m 1 2>/dev/null)
 
 RX_BYTES=$(echo "$JSON_DATA" | jq -r '.interfaces[0].traffic.month[0].rx' 2>/dev/null)
@@ -143,19 +141,15 @@ TX_BYTES=$(echo "$JSON_DATA" | jq -r '.interfaces[0].traffic.month[0].tx' 2>/dev
 case "$RX_BYTES" in ''|'null'|*[!0-9]*) RX_BYTES=0 ;; esac
 case "$TX_BYTES" in ''|'null'|*[!0-9]*) TX_BYTES=0 ;; esac
 
-# 转换为 GB (保留两位小数)
 RX_GB=$(awk "BEGIN {printf \"%.2f\", $RX_BYTES / 1024 / 1024 / 1024}")
 TX_GB=$(awk "BEGIN {printf \"%.2f\", $TX_BYTES / 1024 / 1024 / 1024}")
 
 LOG_MSG="[$TIME_NOW] 网卡: ${INTERFACE} | 入站: ${RX_GB} GB | 出站: ${TX_GB} GB | 单向限额: ${MAX_GB} GB"
 echo "$LOG_MSG" | tee -a "$LOG_FILE"
 
-# 保留最近 200 行日志
 tail -n 200 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
 
 # ---------------- 8. 功能逻辑控制 ----------------
-
-# 手动发送/定时推送流量日报
 if [ "$1" = "send_tg" ] || [ "$1" = "send" ]; then
     TG_TEXT="📊 *VPS 每日双向流量日报*
 📅 时间: \`${TIME_NOW}\`
@@ -168,7 +162,6 @@ if [ "$1" = "send_tg" ] || [ "$1" = "send" ]; then
     exit 0
 fi
 
-# 检查超限情况
 RX_MB=$((RX_BYTES / 1024 / 1024))
 TX_MB=$((TX_BYTES / 1024 / 1024))
 MAX_MB=$((MAX_GB * 1024))
@@ -184,7 +177,6 @@ elif [ "$TX_MB" -ge "$MAX_MB" ] && [ "$MAX_MB" -gt 0 ]; then
     REASON="出站流量 (${TX_GB} GB) 已达限额 (${MAX_GB} GB)"
 fi
 
-# 触发超限自动关机
 if [ "$TRIGGER_SHUTDOWN" -eq 1 ]; then
     WARN_MSG="[$TIME_NOW] 警告：${REASON}，准备关机！"
     echo "$WARN_MSG" | tee -a "$LOG_FILE"
