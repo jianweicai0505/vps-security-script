@@ -70,7 +70,7 @@ configure_interactive() {
         TG_CHAT_ID="无"
     fi
 
-    # 保存配置到文件
+    # 保存配置到独立文件
     cat << EOF > "$CONFIG_FILE"
 INTERFACE="${INTERFACE}"
 MAX_GB="${MAX_GB}"
@@ -99,7 +99,7 @@ if [ "$1" = "-c" ] || [ "$1" = "--config" ] || [ ! -f "$CONFIG_FILE" ]; then
     configure_interactive
 fi
 
-# 载入配置
+# 载入独立配置文件
 . "$CONFIG_FILE"
 
 # ---------------- 5. 依赖安装与守护进程设置 ----------------
@@ -174,7 +174,7 @@ if [ "$RX_MB" -ge "$MAX_MB" ] && [ "$MAX_MB" -gt 0 ]; then
     REASON="入站流量 (${RX_GB} GB) 已达限额 (${MAX_GB} GB)"
 elif [ "$TX_MB" -ge "$MAX_MB" ] && [ "$MAX_MB" -gt 0 ]; then
     TRIGGER_SHUTDOWN=1
-    REASON="出站流量 (${TX_GB} GB) 已达限额 (${MAX_GB} GB)"
+    REASON="出_站流量 (${TX_GB} GB) 已达限额 (${MAX_GB} GB)"
 fi
 
 if [ "$TRIGGER_SHUTDOWN" -eq 1 ]; then
